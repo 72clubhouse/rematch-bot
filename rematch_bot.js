@@ -7,6 +7,7 @@ const BOT_TOKEN = process.env.BOT_TOKEN;
 const GROUP_CHAT_ID = process.env.GROUP_CHAT_ID;
 const SHEET_ID = process.env.SHEET_ID;
 const GOOGLE_CREDS = JSON.parse(process.env.GOOGLE_CREDS);
+const RENDER_URL = process.env.RENDER_URL; // https://rematch-bot-scgu.onrender.com
 const REMATCH_TTL = 24 * 60 * 60 * 1000;
 
 const API = `https://api.telegram.org/bot${BOT_TOKEN}`;
@@ -40,10 +41,7 @@ async function findPlayer(clubGGName) {
 async function sendMessage(chatId, text, extra = {}) {
   try {
     const res = await axios.post(`${API}/sendMessage`, {
-      chat_id: chatId,
-      text,
-      parse_mode: 'Markdown',
-      ...extra,
+      chat_id: chatId, text, parse_mode: 'Markdown', ...extra,
     });
     return res.data.result;
   } catch (e) {
@@ -55,10 +53,7 @@ async function sendMessage(chatId, text, extra = {}) {
 async function editMessage(chatId, messageId, text) {
   try {
     await axios.post(`${API}/editMessageText`, {
-      chat_id: chatId,
-      message_id: messageId,
-      text,
-      parse_mode: 'Markdown',
+      chat_id: chatId, message_id: messageId, text, parse_mode: 'Markdown',
     });
   } catch (e) {
     console.error('editMessage error:', e.response?.data || e.message);
@@ -94,7 +89,7 @@ async function handleRematch(msg, args) {
   if (!player) {
     await sendMessage(chatId,
       `โ Player *${targetName}* not found\n\n` +
-      `โ€ข Check spelling (case sensitive)\n` +
+      `โ€ข Check spelling\n` +
       `โ€ข Player may not be registered yet`
     );
     return;
@@ -113,7 +108,7 @@ async function handleRematch(msg, args) {
   );
 
   if (!groupMsg) {
-    await sendMessage(chatId, 'โ ๏ธ Cannot post in group. Make sure Bot is Admin in the group.');
+    await sendMessage(chatId, 'โ ๏ธ Cannot post in group. Make sure Bot is in the group.');
     return;
   }
 
@@ -137,7 +132,7 @@ async function handleRematch(msg, args) {
 
   pending[key] = { fromId, targetClubGG: player.clubGG, expiresAt, groupMsgId: groupMsg.message_id };
   await sendMessage(chatId,
-    `โ… Challenge sent to *${player.clubGG}*!\nWaiting for response... (24h)\n\n๐”’ Your identity is hidden`
+    `โ… Challenge sent to *${player.clubGG}*!\nWaiting... (24h)\n\n๐”’ Your identity is hidden`
   );
 }
 
@@ -200,7 +195,6 @@ async function handleCallback(cb) {
     );
     await editMessage(cb.message.chat.id, cb.message.message_id, 'โ… Challenge accepted! ๐ฎ');
     await sendMessage(parseInt(fromId), `๐ *${targetClubGG}* accepted!\n\nContact them in Club GG โ”๏ธ`);
-
   } else if (action === 'decline') {
     delete pending[key];
     await editMessage(GROUP_CHAT_ID, parseInt(groupMsgId),
@@ -222,40 +216,53 @@ function cleanupExpired() {
 }
 setInterval(cleanupExpired, 30 * 60 * 1000);
 
-let offset = 0;
-
-async function poll() {
+async function processUpdate(update) {
   try {
-    const res = await axios.get(`${API}/getUpdates`, {
-      params: { offset, timeout: 30, allowed_updates: ['message', 'callback_query'] },
-      timeout: 35000,
-    });
-    for (const update of res.data.result) {
-      offset = update.update_id + 1;
-      if (update.callback_query) { await handleCallback(update.callback_query); continue; }
-      const msg = update.message;
-      if (!msg || !msg.text) continue;
-      console.log('chat_id:', msg.chat.id, 'type:', msg.chat.type);
-      const [cmd, ...args] = msg.text.trim().split(/\s+/);
-      if (cmd === '/start' || cmd === '/help') await handleHelp(msg);
-      else if (cmd === '/rematch') await handleRematch(msg, args);
-      else if (cmd === '/cancel') await handleCancel(msg, args);
-      else if (cmd === '/pending') await handlePending(msg);
-    }
+    if (update.callback_query) { await handleCallback(update.callback_query); return; }
+    const msg = update.message;
+    if (!msg || !msg.text) return;
+    const [cmd, ...args] = msg.text.trim().split(/\s+/);
+    if (cmd === '/start' || cmd === '/help') await handleHelp(msg);
+    else if (cmd === '/rematch') await handleRematch(msg, args);
+    else if (cmd === '/cancel') await handleCancel(msg, args);
+    else if (cmd === '/pending') await handlePending(msg);
   } catch (e) {
-    console.error('Poll error:', e.message);
+    console.error('processUpdate error:', e.message);
   }
-  setTimeout(poll, 1000);
 }
 
-http.createServer((req, res) => res.end('RematchBot running')).listen(process.env.PORT || 3000);
+// Webhook server
+const server = http.createServer(async (req, res) => {
+  if (req.method === 'POST' && req.url === `/webhook/${BOT_TOKEN}`) {
+    let body = '';
+    req.on('data', chunk => body += chunk);
+    req.on('end', async () => {
+      try {
+        const update = JSON.parse(body);
+        await processUpdate(update);
+      } catch (e) {
+        console.error('Webhook parse error:', e.message);
+      }
+      res.writeHead(200);
+      res.end('OK');
+    });
+  } else {
+    res.writeHead(200);
+    res.end('RematchBot running');
+  }
+});
 
-// Clear any existing connections before starting
-axios.post(`${API}/deleteWebhook`, { drop_pending_updates: true })
-  .then(() => {
-    console.log('RematchBot started!');
-    poll();
-  })
-  .catch((e) => {
-    console.error('Startup error:', e.message);
-  });
+const PORT = process.env.PORT || 3000;
+server.listen(PORT, async () => {
+  console.log(`Server running on port ${PORT}`);
+  // Set webhook
+  try {
+    await axios.post(`${API}/setWebhook`, {
+      url: `${RENDER_URL}/webhook/${BOT_TOKEN}`,
+      drop_pending_updates: true,
+    });
+    console.log('Webhook set successfully!');
+  } catch (e) {
+    console.error('Webhook setup error:', e.message);
+  }
+});
