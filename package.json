@@ -1,0 +1,13 @@
+{
+  "name": "rematch-bot",
+  "version": "1.0.0",
+  "main": "rematch_bot.js",
+  "scripts": {
+    "start": "node rematch_bot.js"
+  },
+  "dependencies": {
+    "axios": "^1.6.0",
+    "google-auth-library": "^9.0.0",
+    "google-spreadsheet": "^4.1.1"
+  }
+}
