@@ -111,12 +111,12 @@ async function handleUpdate(update) {
           telegram_id: '@' + (update.message.from.username || userId),
         });
         await notifyAdmin(
-          '๐• <b>New Member!</b>\n\n' +
-          '๐‘ค Name: ' + s.name + '\n' +
-          '๐“ Phone: ' + s.phone + '\n' +
-          '๐ฆ Bank: ' + s.bank + '\n' +
-          '๐ฎ Club GG ID: ' + s.clubgg_id + '\n' +
-          '๐“ฑ Telegram: @' + (update.message.from.username || userId)
+          '\u{1F195} <b>New Member!</b>\n\n' +
+          '\u{1F464} Name: ' + s.name + '\n' +
+          '\u{1F4DE} Phone: ' + s.phone + '\n' +
+          '\u{1F3E6} Bank: ' + s.bank + '\n' +
+          '\u{1F3AE} Club GG ID: ' + s.clubgg_id + '\n' +
+          '\u{1F4F1} Telegram: @' + (update.message.from.username || userId)
         );
         s.step = 'rematch';
         await send(chatId, MSG.rematch_step, [
