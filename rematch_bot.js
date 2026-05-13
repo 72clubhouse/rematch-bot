@@ -72,10 +72,10 @@ async function answerCallback(id) {
 }
 
 async function sendWelcome(chatId) {
-  await sendMessage(chatId, 'Do you want a rematch? / เธเธธเธ“เธ•เนเธญเธเธเธฒเธฃเนเธเนเธกเธทเธญเนเธเนเนเธซเธก? โ”๏ธ', {
+  await sendMessage(chatId, 'Do you want a rematch? / \u0e04\u0e38\u0e13\u0e15\u0e49\u0e2d\u0e07\u0e01\u0e32\u0e23\u0e41\u0e01\u0e49\u0e21\u0e37\u0e2d\u0e43\u0e0a\u0e48\u0e44\u0e2b\u0e21? \u2694\uFE0F', {
     reply_markup: {
       inline_keyboard: [[
-        { text: 'Yes! / เนเธเน เธเธฑเธเธ•เนเธญเธเธเธฒเธฃเนเธเนเธกเธทเธญ!', callback_data: 'start_rematch' }
+        { text: 'Yes! / \u0e43\u0e0a\u0e48 \u0e09\u0e31\u0e19\u0e15\u0e49\u0e2d\u0e07\u0e01\u0e32\u0e23\u0e41\u0e01\u0e49\u0e21\u0e37\u0e2d!', callback_data: 'start_rematch' }
       ]]
     }
   });
@@ -88,17 +88,17 @@ async function processRematch(msg, targetId) {
 
   if (!player) {
     await sendMessage(chatId,
-      `ID *${targetId}* not found / เนเธกเนเธเธเนเธเธฃเธฐเธเธ\n\n` +
-      `- Check spelling / เธ•เธฃเธงเธเธชเธญเธ ID เนเธซเนเธ–เธนเธเธ•เนเธญเธ\n` +
-      `- May not be registered / เธญเธฒเธเธขเธฑเธเนเธกเนเนเธ”เนเธฅเธเธ—เธฐเน€เธเธตเธขเธ\n\n` +
-      `Please type the ID again / เธฅเธญเธเธเธดเธกเธเนเนเธซเธกเนเนเธ”เนเน€เธฅเธขเธเธฃเธฑเธ`
+      `ID *${targetId}* not found / \u0e44\u0e21\u0e48\u0e1e\u0e1a\u0e43\u0e19\u0e23\u0e30\u0e1a\u0e1a\n\n` +
+      `- Check spelling / \u0e15\u0e23\u0e27\u0e08\u0e2a\u0e2d\u0e1a ID \u0e43\u0e2b\u0e49\u0e16\u0e39\u0e01\u0e15\u0e49\u0e2d\u0e07\n` +
+      `- May not be registered / \u0e2d\u0e32\u0e08\u0e22\u0e31\u0e07\u0e44\u0e21\u0e48\u0e44\u0e14\u0e49\u0e25\u0e07\u0e17\u0e30\u0e40\u0e1a\u0e35\u0e22\u0e19\n\n` +
+      `Please type the ID again / \u0e25\u0e2d\u0e07\u0e1e\u0e34\u0e21\u0e1e\u0e4c\u0e43\u0e2b\u0e21\u0e48\u0e44\u0e14\u0e49\u0e40\u0e25\u0e22\u0e04\u0e23\u0e31\u0e1a`
     );
     waiting[fromId] = true;
     return;
   }
 
   if (player.telegramId === `@${msg.from.username}`) {
-    await sendMessage(chatId, 'Cannot challenge yourself! / เธ—เนเธฒเธ•เธฑเธงเน€เธญเธเนเธกเนเนเธ”เนเธเธฐเธเธฃเธฑเธ! Try again / เธฅเธญเธเนเธซเธกเนเนเธ”เนเน€เธฅเธข');
+    await sendMessage(chatId, 'Cannot challenge yourself! / \u0e17\u0e49\u0e32\u0e15\u0e31\u0e27\u0e40\u0e2d\u0e07\u0e44\u0e21\u0e48\u0e44\u0e14\u0e49\u0e19\u0e30\u0e04\u0e23\u0e31\u0e1a! Try again / \u0e25\u0e2d\u0e07\u0e43\u0e2b\u0e21\u0e48\u0e44\u0e14\u0e49\u0e40\u0e25\u0e22');
     waiting[fromId] = true;
     return;
   }
@@ -108,44 +108,44 @@ async function processRematch(msg, targetId) {
 
   const groupMsg = await sendMessage(GROUP_CHAT_ID,
     `Someone challenged *${player.clubGG}* to a rematch!\n` +
-    `เธกเธตเธเธเธ—เนเธฒเนเธเนเธกเธทเธญ *${player.clubGG}* เนเธฅเนเธง!\n\n` +
-    `Who is it? Nobody knows / เธเธฐเน€เธเนเธเนเธเธฃเธเธฑเนเธ เนเธกเนเธกเธตเนเธเธฃเธฃเธนเน ๐คซ\n` +
-    `Stay tuned / เธฃเธญเธ”เธนเธเธฅเนเธ”เนเน€เธฅเธข ๐‘€`
+    `\u0e21\u0e35\u0e04\u0e19\u0e17\u0e49\u0e32\u0e41\u0e01\u0e49\u0e21\u0e37\u0e2d *${player.clubGG}* \u0e41\u0e25\u0e49\u0e27!\n\n` +
+    `Who is it? Nobody knows / \u0e08\u0e30\u0e40\u0e1b\u0e47\u0e19\u0e43\u0e04\u0e23\u0e19\u0e31\u0e49\u0e19 \u0e44\u0e21\u0e48\u0e21\u0e35\u0e43\u0e04\u0e23\u0e23\u0e39\u0e49 \uD83E\uDD2B\n` +
+    `Stay tuned / \u0e23\u0e2d\u0e14\u0e39\u0e1c\u0e25\u0e44\u0e14\u0e49\u0e40\u0e25\u0e22 \uD83D\uDC40`
   );
 
   if (!groupMsg) {
-    await sendMessage(chatId, 'Cannot post in group / เธชเนเธเธเธฃเธฐเธเธฒเธจเนเธ group เนเธกเนเนเธ”เนเธเธฃเธฑเธ');
+    await sendMessage(chatId, 'Cannot post in group / \u0e2a\u0e48\u0e07\u0e1b\u0e23\u0e30\u0e01\u0e32\u0e28\u0e43\u0e19 group \u0e44\u0e21\u0e48\u0e44\u0e14\u0e49\u0e04\u0e23\u0e31\u0e1a');
     return;
   }
 
   const keyboard = {
     inline_keyboard: [[
-      { text: 'Accept / เธฃเธฑเธเธเธณเธ—เนเธฒ', callback_data: `accept|${fromId}|${player.clubGG}|${groupMsg.message_id}` },
-      { text: 'Decline / เธเธเธดเน€เธชเธ', callback_data: `decline|${fromId}|${player.clubGG}|${groupMsg.message_id}` },
+      { text: 'Accept / \u0e23\u0e31\u0e1a\u0e04\u0e33\u0e17\u0e49\u0e32', callback_data: `accept|${fromId}|${player.clubGG}|${groupMsg.message_id}` },
+      { text: 'Decline / \u0e1b\u0e0f\u0e34\u0e40\u0e2a\u0e18', callback_data: `decline|${fromId}|${player.clubGG}|${groupMsg.message_id}` },
     ]]
   };
 
   const dmResult = await sendMessage(player.telegramId,
-    `Someone wants a rematch! / เธกเธตเธเธเธเธญเนเธเนเธกเธทเธญเธเธธเธ“!\n` +
+    `Someone wants a rematch! / \u0e21\u0e35\u0e04\u0e19\u0e02\u0e2d\u0e41\u0e01\u0e49\u0e21\u0e37\u0e2d\u0e04\u0e38\u0e13!\n` +
     `Club GG ID: *${player.clubGG}*\n\n` +
-    `Accept or decline? / เธฃเธฑเธเธซเธฃเธทเธญเธเธเธดเน€เธชเธ? (expires in 24h / เธซเธกเธ”เธญเธฒเธขเธธเนเธ 24 เธเธก.)`,
+    `Accept or decline? / \u0e23\u0e31\u0e1a\u0e2b\u0e23\u0e37\u0e2d\u0e1b\u0e0f\u0e34\u0e40\u0e2a\u0e18? (expires in 24h / \u0e2b\u0e21\u0e14\u0e2d\u0e32\u0e22\u0e38\u0e43\u0e19 24 \u0e0a\u0e21.)`,
     { reply_markup: keyboard }
   );
 
   if (!dmResult) {
     await deleteMessage(GROUP_CHAT_ID, groupMsg.message_id);
     await sendMessage(chatId,
-      `Cannot DM *${player.clubGG}* / เธชเนเธเธเนเธญเธเธงเธฒเธกเนเธกเนเนเธ”เน\n` +
-      `Ask them to start the Bot first / เนเธซเนเน€เธเธฒเธเธ” Start เธ—เธตเน Bot เธเนเธญเธเธเธฐเธเธฃเธฑเธ`
+      `Cannot DM *${player.clubGG}* / \u0e2a\u0e48\u0e07\u0e02\u0e49\u0e2d\u0e04\u0e27\u0e32\u0e21\u0e44\u0e21\u0e48\u0e44\u0e14\u0e49\n` +
+      `Ask them to start the Bot first / \u0e43\u0e2b\u0e49\u0e40\u0e02\u0e32\u0e01\u0e14 Start \u0e17\u0e35\u0e48 Bot \u0e01\u0e48\u0e2d\u0e19\u0e19\u0e30\u0e04\u0e23\u0e31\u0e1a`
     );
     return;
   }
 
   pending[key] = { fromId, targetClubGG: player.clubGG, expiresAt, groupMsgId: groupMsg.message_id };
   await sendMessage(chatId,
-    `Challenge sent to *${player.clubGG}*! / เธชเนเธเธเธณเธ—เนเธฒเนเธฅเนเธง!\n` +
-    `Waiting... / เธฃเธญเธเธฒเธฃเธ•เธญเธเธฃเธฑเธ (24h / 24 เธเธก.)\n\n` +
-    `Your identity is hidden / เนเธกเนเธกเธตเนเธเธฃเธฃเธนเนเธงเนเธฒเธเธธเธ“เธเธทเธญเธเธเธ—เนเธฒ ๐”’`
+    `Challenge sent to *${player.clubGG}*! / \u0e2a\u0e48\u0e07\u0e04\u0e33\u0e17\u0e49\u0e32\u0e41\u0e25\u0e49\u0e27!\n` +
+    `Waiting... / \u0e23\u0e2d\u0e01\u0e32\u0e23\u0e15\u0e2d\u0e1a\u0e23\u0e31\u0e1a (24h / 24 \u0e0a\u0e21.)\n\n` +
+    `Your identity is hidden / \u0e44\u0e21\u0e48\u0e21\u0e35\u0e43\u0e04\u0e23\u0e23\u0e39\u0e49\u0e27\u0e48\u0e32\u0e04\u0e38\u0e13\u0e04\u0e37\u0e2d\u0e04\u0e19\u0e17\u0e49\u0e32 \uD83D\uDD12`
   );
 }
 
@@ -154,7 +154,7 @@ function cleanupExpired() {
   for (const [key, entry] of Object.entries(pending)) {
     if (now > entry.expiresAt) {
       editMessage(GROUP_CHAT_ID, entry.groupMsgId,
-        `Challenge expired / เธเธณเธ—เนเธฒ *${entry.targetClubGG}* เธซเธกเธ”เธญเธฒเธขเธธเนเธฅเนเธง โฐ`
+        `Challenge expired / \u0e04\u0e33\u0e17\u0e49\u0e32 *${entry.targetClubGG}* \u0e2b\u0e21\u0e14\u0e2d\u0e32\u0e22\u0e38\u0e41\u0e25\u0e49\u0e27 \u23F0`
       ).catch(() => {});
       delete pending[key];
     }
@@ -177,7 +177,7 @@ async function handleCallback(cb) {
     waiting[fromId] = true;
     await sendMessage(chatId,
       'Please enter the Club GG ID of the player you want to challenge\n' +
-      'เธเธฃเธธเธ“เธฒเธเธฃเธญเธ ID Club GG เธเธญเธเธเธนเนเธ—เธตเนเธเธธเธ“เธ•เนเธญเธเธเธฒเธฃเธ—เนเธฒเนเธ”เนเน€เธฅเธขเธเธฃเธฑเธ'
+      '\u0e01\u0e23\u0e38\u0e13\u0e32\u0e01\u0e23\u0e2d\u0e01 ID Club GG \u0e02\u0e2d\u0e07\u0e1c\u0e39\u0e49\u0e17\u0e35\u0e48\u0e04\u0e38\u0e13\u0e15\u0e49\u0e2d\u0e07\u0e01\u0e32\u0e23\u0e17\u0e49\u0e32\u0e44\u0e14\u0e49\u0e40\u0e25\u0e22\u0e04\u0e23\u0e31\u0e1a'
     );
     return;
   }
@@ -188,31 +188,31 @@ async function handleCallback(cb) {
 
   if (entry && Date.now() > entry.expiresAt) {
     delete pending[key];
-    await editMessage(chatId, cb.message.message_id, 'Challenge expired / เธเธณเธ—เนเธฒเธเธตเนเธซเธกเธ”เธญเธฒเธขเธธเนเธฅเนเธง โฐ');
+    await editMessage(chatId, cb.message.message_id, 'Challenge expired / \u0e04\u0e33\u0e17\u0e49\u0e32\u0e19\u0e35\u0e49\u0e2b\u0e21\u0e14\u0e2d\u0e32\u0e22\u0e38\u0e41\u0e25\u0e49\u0e27 \u23F0');
     return;
   }
 
   if (action === 'accept') {
     delete pending[key];
     await editMessage(GROUP_CHAT_ID, parseInt(groupMsgId),
-      `*${targetClubGG}* accepted the challenge! / เธฃเธฑเธเธเธณเธ—เนเธฒเนเธฅเนเธง!\n\n` +
-      `The match is on! / เธเธฒเธฃเนเธเนเธเธเธฑเธเธเธณเธฅเธฑเธเธเธฐเน€เธฃเธดเนเธก ๐”ฅ\n` +
-      `Who will win? / เนเธเธฃเธเธฐเธเธเธฐ เธฃเธญเธ”เธนเธเธฑเธเน€เธฅเธข ๐‘€`
+      `*${targetClubGG}* accepted the challenge! / \u0e23\u0e31\u0e1a\u0e04\u0e33\u0e17\u0e49\u0e32\u0e41\u0e25\u0e49\u0e27!\n\n` +
+      `The match is on! / \u0e01\u0e32\u0e23\u0e41\u0e02\u0e48\u0e07\u0e02\u0e31\u0e19\u0e01\u0e33\u0e25\u0e31\u0e07\u0e08\u0e30\u0e40\u0e23\u0e34\u0e48\u0e21 \uD83D\uDD25\n` +
+      `Who will win? / \u0e43\u0e04\u0e23\u0e08\u0e30\u0e0a\u0e19\u0e30 \u0e23\u0e2d\u0e14\u0e39\u0e01\u0e31\u0e19\u0e40\u0e25\u0e22 \uD83D\uDC40`
     );
-    await editMessage(chatId, cb.message.message_id, 'Challenge accepted! / เธฃเธฑเธเธเธณเธ—เนเธฒเนเธฅเนเธง! ๐ฎ');
+    await editMessage(chatId, cb.message.message_id, 'Challenge accepted! / \u0e23\u0e31\u0e1a\u0e04\u0e33\u0e17\u0e49\u0e32\u0e41\u0e25\u0e49\u0e27! \uD83C\uDFAE');
     await sendMessage(parseInt(challengerId),
-      `*${targetClubGG}* accepted your challenge! / เธฃเธฑเธเธเธณเธ—เนเธฒเนเธฅเนเธง!\n\n` +
-      `Contact them in Club GG / เธ•เธดเธ”เธ•เนเธญเธเธฑเธเนเธ Club GG เนเธ”เนเน€เธฅเธขเธเธฃเธฑเธ โ”๏ธ`
+      `*${targetClubGG}* accepted your challenge! / \u0e23\u0e31\u0e1a\u0e04\u0e33\u0e17\u0e49\u0e32\u0e41\u0e25\u0e49\u0e27!\n\n` +
+      `Contact them in Club GG / \u0e15\u0e34\u0e14\u0e15\u0e48\u0e2d\u0e01\u0e31\u0e19\u0e43\u0e19 Club GG \u0e44\u0e14\u0e49\u0e40\u0e25\u0e22\u0e04\u0e23\u0e31\u0e1a \u2694\uFE0F`
     );
   } else if (action === 'decline') {
     delete pending[key];
     await editMessage(GROUP_CHAT_ID, parseInt(groupMsgId),
-      `*${targetClubGG}* declined the challenge / เธเธเธดเน€เธชเธเธเธณเธ—เนเธฒเธเธฃเธฑเนเธเธเธตเน\n\n` +
-      `Maybe next time / เนเธงเนเธเธฃเธฒเธงเธซเธเนเธฒเธเธฐ ๐‘`
+      `*${targetClubGG}* declined the challenge / \u0e1b\u0e0f\u0e34\u0e40\u0e2a\u0e18\u0e04\u0e33\u0e17\u0e49\u0e32\u0e04\u0e23\u0e31\u0e49\u0e07\u0e19\u0e35\u0e49\n\n` +
+      `Maybe next time / \u0e44\u0e27\u0e49\u0e04\u0e23\u0e32\u0e27\u0e2b\u0e19\u0e49\u0e32\u0e19\u0e30 \uD83D\uDC4B`
     );
-    await editMessage(chatId, cb.message.message_id, 'Challenge declined / เธเธเธดเน€เธชเธเธเธณเธ—เนเธฒเนเธฅเนเธง โ');
+    await editMessage(chatId, cb.message.message_id, 'Challenge declined / \u0e1b\u0e0f\u0e34\u0e40\u0e2a\u0e18\u0e04\u0e33\u0e17\u0e49\u0e32\u0e41\u0e25\u0e49\u0e27 \u274C');
     await sendMessage(parseInt(challengerId),
-      `*${targetClubGG}* declined your challenge / เธเธเธดเน€เธชเธเธเธณเธ—เนเธฒเธเธฃเธฑเนเธเธเธตเน ๐”`
+      `*${targetClubGG}* declined your challenge / \u0e1b\u0e0f\u0e34\u0e40\u0e2a\u0e18\u0e04\u0e33\u0e17\u0e49\u0e32\u0e04\u0e23\u0e31\u0e49\u0e07\u0e19\u0e35\u0e49 \uD83D\uDE14`
     );
   }
 }
