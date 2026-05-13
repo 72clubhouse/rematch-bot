@@ -249,5 +249,13 @@ async function poll() {
 }
 
 http.createServer((req, res) => res.end('RematchBot running')).listen(process.env.PORT || 3000);
-console.log('RematchBot started!');
-poll();
+
+// Clear any existing connections before starting
+axios.post(`${API}/deleteWebhook`, { drop_pending_updates: true })
+  .then(() => {
+    console.log('RematchBot started!');
+    poll();
+  })
+  .catch((e) => {
+    console.error('Startup error:', e.message);
+  });
