@@ -12,8 +12,6 @@ const REMATCH_TTL = 24 * 60 * 60 * 1000;
 
 const API = `https://api.telegram.org/bot${BOT_TOKEN}`;
 const pending = {};
-
-// waiting = users who pressed the button and we're waiting for them to type ID
 const waiting = {};
 
 async function findPlayer(clubGGId) {
@@ -73,20 +71,15 @@ async function answerCallback(callbackQueryId) {
   await axios.post(`${API}/answerCallbackQuery`, { callback_query_id: callbackQueryId }).catch(() => {});
 }
 
-// โ”€โ”€ Send welcome with rematch button โ”€โ”€
 async function sendWelcome(chatId) {
   const keyboard = {
     inline_keyboard: [[
       { text: 'โ”๏ธ เนเธเน เธเธฑเธเธ•เนเธญเธเธเธฒเธฃเนเธเนเธกเธทเธญ!', callback_data: 'start_rematch' }
     ]]
   };
-  await sendMessage(chatId,
-    '๐ฎ เธเธธเธ“เธ•เนเธญเธเธเธฒเธฃเนเธเนเธกเธทเธญเนเธเนเนเธซเธก?',
-    { reply_markup: keyboard }
-  );
+  await sendMessage(chatId, '๐ฎ เธเธธเธ“เธ•เนเธญเธเธเธฒเธฃเนเธเนเธกเธทเธญเนเธเนเนเธซเธก?', { reply_markup: keyboard });
 }
 
-// โ”€โ”€ Process rematch request โ”€โ”€
 async function processRematch(msg, targetId) {
   const chatId = msg.chat.id;
   const fromId = msg.from.id;
@@ -97,9 +90,8 @@ async function processRematch(msg, targetId) {
       `โ เนเธกเนเธเธ ID *${targetId}* เนเธเธฃเธฐเธเธ\n\n` +
       `โ€ข เธ•เธฃเธงเธเธชเธญเธ ID เนเธซเนเธ–เธนเธเธ•เนเธญเธ\n` +
       `โ€ข เธเธนเนเน€เธฅเนเธเธญเธฒเธเธขเธฑเธเนเธกเนเนเธ”เนเธฅเธเธ—เธฐเน€เธเธตเธขเธ\n\n` +
-      `เธฅเธญเธเนเธซเธกเนเธญเธตเธเธเธฃเธฑเนเธเนเธ”เนเน€เธฅเธขเธเธฃเธฑเธ`
+      `เธฅเธญเธเธเธดเธกเธเน ID เนเธซเธกเนเนเธ”เนเน€เธฅเธขเธเธฃเธฑเธ`
     );
-    // เนเธซเนเธเธดเธกเธเนเนเธซเธกเนเนเธ”เนเน€เธฅเธข
     waiting[fromId] = true;
     return;
   }
@@ -113,7 +105,6 @@ async function processRematch(msg, targetId) {
   const key = targetId.toLowerCase();
   const expiresAt = Date.now() + REMATCH_TTL;
 
-  // เธเธฃเธฐเธเธฒเธจเนเธ group
   const groupMsg = await sendMessage(GROUP_CHAT_ID,
     `โ”๏ธ เธกเธตเธเธเธ—เนเธฒเนเธเนเธกเธทเธญ *${player.clubGG}*!\n\nเธเธฐเน€เธเนเธเนเธเธฃเธเธฑเนเธ... เนเธกเนเธกเธตเนเธเธฃเธฃเธนเน ๐คซ\nเธฃเธญเธ”เธนเธเธฅเนเธ”เนเน€เธฅเธข ๐‘€`
   );
@@ -123,7 +114,6 @@ async function processRematch(msg, targetId) {
     return;
   }
 
-  // เธชเนเธ DM เธซเธฒเธเธนเนเธ–เธนเธเธ—เนเธฒ
   const keyboard = {
     inline_keyboard: [[
       { text: 'โ… เธฃเธฑเธเธเธณเธ—เนเธฒ', callback_data: `accept|${fromId}|${player.clubGG}|${groupMsg.message_id}` },
@@ -171,15 +161,13 @@ async function handleCallback(cb) {
   const fromId = cb.from.id;
 
   if (data === 'start_rematch') {
-    // เธฅเธเธเธธเนเธกเธญเธญเธ เนเธฅเนเธงเธ–เธฒเธกเธซเธฒ ID
     await axios.post(`${API}/editMessageReplyMarkup`, {
       chat_id: chatId,
       message_id: cb.message.message_id,
       reply_markup: { inline_keyboard: [] }
     }).catch(() => {});
-
     waiting[fromId] = true;
-    await sendMessage(chatId, '๐“ เธเธฃเธธเธ“เธฒเธเธฃเธญเธ *ID Club GG* เธเธญเธเธเธนเนเธ—เธตเนเธเธธเธ“เธ•เนเธญเธเธเธฒเธฃเธ—เนเธฒเนเธ”เนเน€เธฅเธขเธเธฃเธฑเธ', {});
+    await sendMessage(chatId, '๐“ เธเธฃเธธเธ“เธฒเธเธฃเธญเธ *ID Club GG* เธเธญเธเธเธนเนเธ—เธตเนเธเธธเธ“เธ•เนเธญเธเธเธฒเธฃเธ—เนเธฒเนเธ”เนเน€เธฅเธขเธเธฃเธฑเธ');
     return;
   }
 
@@ -199,8 +187,9 @@ async function handleCallback(cb) {
       `โ”๏ธ *${targetClubGG}* เธฃเธฑเธเธเธณเธ—เนเธฒเนเธฅเนเธง!\n\nเธเธฒเธฃเนเธเนเธเธเธฑเธเธเธณเธฅเธฑเธเธเธฐเน€เธฃเธดเนเธก... ๐”ฅ\nเนเธเธฃเธเธฐเธเธเธฐ เธฃเธญเธ”เธนเธเธฑเธเน€เธฅเธข ๐‘€`
     );
     await editMessage(chatId, cb.message.message_id, 'โ… เธฃเธฑเธเธเธณเธ—เนเธฒเนเธฅเนเธง! ๐ฎ');
-    await sendMessage(parseInt(challengerId), `๐ *${targetClubGG}* เธฃเธฑเธเธเธณเธ—เนเธฒเนเธฅเนเธง!\n\nเธ•เธดเธ”เธ•เนเธญเธเธฑเธเนเธ Club GG เนเธ”เนเน€เธฅเธขเธเธฃเธฑเธ โ”๏ธ`);
-
+    await sendMessage(parseInt(challengerId),
+      `๐ *${targetClubGG}* เธฃเธฑเธเธเธณเธ—เนเธฒเนเธฅเนเธง!\n\nเธ•เธดเธ”เธ•เนเธญเธเธฑเธเนเธ Club GG เนเธ”เนเน€เธฅเธขเธเธฃเธฑเธ โ”๏ธ`
+    );
   } else if (action === 'decline') {
     delete pending[key];
     await editMessage(GROUP_CHAT_ID, parseInt(groupMsgId),
@@ -220,32 +209,20 @@ async function processUpdate(update) {
 
     const msg = update.message;
     if (!msg || !msg.text) return;
+    if (msg.chat.type !== 'private') return;
 
     const chatId = msg.chat.id;
     const fromId = msg.from.id;
     const text = msg.text.trim();
 
-    // เธ–เนเธฒเธญเธขเธนเนเนเธ group เนเธกเนเธ•เธญเธเธชเธเธญเธ
-    if (msg.chat.type !== 'private') return;
-
-    // เธ–เนเธฒเธเธณเธฅเธฑเธเธฃเธญ ID Club GG
     if (waiting[fromId] && !text.startsWith('/')) {
       delete waiting[fromId];
       await processRematch(msg, text);
       return;
     }
 
-    // Commands
     if (text === '/start' || text === '/help') {
       await sendWelcome(chatId);
-    } else if (text.startsWith('/rematch')) {
-      const args = text.split(/\s+/).slice(1);
-      if (args.length) {
-        await processRematch(msg, args.join(' '));
-      } else {
-        waiting[fromId] = true;
-        await sendMessage(chatId, '๐“ เธเธฃเธธเธ“เธฒเธเธฃเธญเธ *ID Club GG* เธเธญเธเธเธนเนเธ—เธตเนเธเธธเธ“เธ•เนเธญเธเธเธฒเธฃเธ—เนเธฒเนเธ”เนเน€เธฅเธขเธเธฃเธฑเธ');
-      }
     }
 
   } catch (e) {
@@ -253,7 +230,6 @@ async function processUpdate(update) {
   }
 }
 
-// Webhook server
 const server = http.createServer(async (req, res) => {
   if (req.method === 'POST' && req.url === `/webhook/${BOT_TOKEN}`) {
     let body = '';
