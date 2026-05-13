@@ -1,60 +1,34 @@
-/**
- * RematchBot — ระบบแก้มือแบบไม่เปิดเผยตัวผู้ท้า
- * ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
- * Google Sheet: "72Clubhouse Members" / ชีต1
- *   คอลัมน์ E = ID Club GG
- *   คอลัมน์ G = Telegram ID (@username)
- *
- * ติดตั้ง: npm install axios google-spreadsheet http
- */
-
-const axios           = require('axios');
-const http            = require('http');
+const axios = require('axios');
+const http = require('http');
 const { GoogleSpreadsheet } = require('google-spreadsheet');
-const { JWT }         = require('google-auth-library');
+const { JWT } = require('google-auth-library');
 
-// ════════════════════════════════════════════
-//  CONFIG — ใช้ Environment Variables บน Render
-// ════════════════════════════════════════════
-const BOT_TOKEN     = process.env.BOT_TOKEN;
-const GROUP_CHAT_ID = process.env.GROUP_CHAT_ID;        // เลขติดลบ เช่น -1001234567890
-const SHEET_ID      = process.env.SHEET_ID;             // ID ใน URL ของ Google Sheet
-const GOOGLE_CREDS  = JSON.parse(process.env.GOOGLE_CREDS); // credentials.json แบบ JSON string
-const REMATCH_TTL   = 24 * 60 * 60 * 1000;             // 24 ชั่วโมง (ms)
+const BOT_TOKEN = process.env.BOT_TOKEN;
+const GROUP_CHAT_ID = process.env.GROUP_CHAT_ID;
+const SHEET_ID = process.env.SHEET_ID;
+const GOOGLE_CREDS = JSON.parse(process.env.GOOGLE_CREDS);
+const REMATCH_TTL = 24 * 60 * 60 * 1000;
 
 const API = `https://api.telegram.org/bot${BOT_TOKEN}`;
-
-// pending rematches
-// key = club_gg_id (lowercase)
-// value = { fromId, fromClubGG, targetClubGG, expiresAt, groupMsgId }
 const pending = {};
-
-// ════════════════════════════════════════════
-//  Google Sheet helper
-// ════════════════════════════════════════════
 
 async function findPlayer(clubGGName) {
   try {
     const auth = new JWT({
       email: GOOGLE_CREDS.client_email,
-      key:   GOOGLE_CREDS.private_key,
+      key: GOOGLE_CREDS.private_key,
       scopes: ['https://www.googleapis.com/auth/spreadsheets.readonly'],
     });
     const doc = new GoogleSpreadsheet(SHEET_ID, auth);
     await doc.loadInfo();
-
-    const sheet = doc.sheetsByIndex[0]; // ชีต1
-    const rows  = await sheet.getRows();
-
+    const sheet = doc.sheetsByIndex[0];
+    const rows = await sheet.getRows();
     const target = clubGGName.trim().toLowerCase();
     for (const row of rows) {
-      const clubGG   = (row.get('ID Club GG') || '').trim().toLowerCase();
+      const clubGG = (row.get('ID Club GG') || '').trim().toLowerCase();
       const telegramId = (row.get('Telegram ID') || '').trim();
       if (clubGG === target && telegramId) {
-        return {
-          clubGG:     row.get('ID Club GG').trim(),
-          telegramId: telegramId, // @username
-        };
+        return { clubGG: row.get('ID Club GG').trim(), telegramId };
       }
     }
   } catch (e) {
@@ -63,14 +37,10 @@ async function findPlayer(clubGGName) {
   return null;
 }
 
-// ════════════════════════════════════════════
-//  Telegram API helpers
-// ════════════════════════════════════════════
-
 async function sendMessage(chatId, text, extra = {}) {
   try {
     const res = await axios.post(`${API}/sendMessage`, {
-      chat_id:    chatId,
+      chat_id: chatId,
       text,
       parse_mode: 'Markdown',
       ...extra,
@@ -85,7 +55,7 @@ async function sendMessage(chatId, text, extra = {}) {
 async function editMessage(chatId, messageId, text) {
   try {
     await axios.post(`${API}/editMessageText`, {
-      chat_id:    chatId,
+      chat_id: chatId,
       message_id: messageId,
       text,
       parse_mode: 'Markdown',
@@ -97,170 +67,119 @@ async function editMessage(chatId, messageId, text) {
 
 async function deleteMessage(chatId, messageId) {
   try {
-    await axios.post(`${API}/deleteMessage`, {
-      chat_id:    chatId,
-      message_id: messageId,
-    });
+    await axios.post(`${API}/deleteMessage`, { chat_id: chatId, message_id: messageId });
   } catch (e) {}
 }
 
-async function answerCallback(callbackQueryId, text = '') {
-  await axios.post(`${API}/answerCallbackQuery`, {
-    callback_query_id: callbackQueryId,
-    text,
-  }).catch(() => {});
+async function answerCallback(callbackQueryId) {
+  await axios.post(`${API}/answerCallbackQuery`, { callback_query_id: callbackQueryId }).catch(() => {});
 }
 
-// ════════════════════════════════════════════
-//  Commands
-// ════════════════════════════════════════════
-
 async function handleRematch(msg, args) {
-  const chatId    = msg.chat.id;
-  const chatType  = msg.chat.type;
-  const fromId    = msg.from.id;
+  const chatId = msg.chat.id;
+  const fromId = msg.from.id;
 
-  // บังคับใช้ใน DM เท่านั้น
-  if (chatType !== 'private') {
-    await sendMessage(chatId, '🔒 กรุณาส่งคำสั่งนี้ใน *DM กับ Bot* นะครับ');
+  if (msg.chat.type !== 'private') {
+    await sendMessage(chatId, '๐”’ Please send this command in DM with the Bot');
     return;
   }
-
   if (!args.length) {
-    await sendMessage(chatId,
-      '❌ วิธีใช้: /rematch <ID Club GG>\nตัวอย่าง: /rematch Panupong'
-    );
+    await sendMessage(chatId, 'โ Usage: /rematch <Club GG ID>\nExample: /rematch Panupong');
     return;
   }
 
   const targetName = args.join(' ').trim();
-  const player     = await findPlayer(targetName);
+  const player = await findPlayer(targetName);
 
   if (!player) {
     await sendMessage(chatId,
-      `❌ ไม่พบ *${targetName}* ในระบบ\n\n` +
-      `อาจเป็นเพราะ:\n` +
-      `• ชื่อในเกมไม่ตรง (ตัวพิมพ์ใหญ่/เล็ก)\n` +
-      `• ${targetName} ยังไม่ได้ลงทะเบียน\n\n` +
-      `💡 ให้ ${targetName} ลงทะเบียนก่อนนะครับ`
+      `โ Player *${targetName}* not found\n\n` +
+      `โ€ข Check spelling (case sensitive)\n` +
+      `โ€ข Player may not be registered yet`
     );
     return;
   }
 
-  // ป้องกันท้าตัวเอง (ถ้า Telegram ID ตรงกัน)
   if (player.telegramId === `@${msg.from.username}`) {
-    await sendMessage(chatId, '😅 ท้าตัวเองไม่ได้นะครับ!');
+    await sendMessage(chatId, '๐… You cannot challenge yourself!');
     return;
   }
 
-  const key       = targetName.toLowerCase();
+  const key = targetName.toLowerCase();
   const expiresAt = Date.now() + REMATCH_TTL;
 
-  // หา Club GG ของคนท้าจาก Sheet (ถ้ามี) หรือใช้ชื่อ Telegram แทน
-  const fromClubGG = msg.from.username ? `@${msg.from.username}` : msg.from.first_name;
-
-  // 1. ประกาศใน group (ไม่บอกชื่อคนท้า)
   const groupMsg = await sendMessage(GROUP_CHAT_ID,
-    `⚔️ มีคนท้าแก้มือ *${player.clubGG}* แล้ว!\n\n` +
-    `จะเป็นใครนั้น... ไม่มีใครรู้ 🤫\n` +
-    `รอดูผลได้เลย 👀`
+    `โ”๏ธ Someone challenged *${player.clubGG}*!\n\nWho is it? Nobody knows ๐คซ\nStay tuned ๐‘€`
   );
 
   if (!groupMsg) {
-    await sendMessage(chatId, '⚠️ ส่งประกาศใน group ไม่ได้ กรุณาตรวจสอบว่า Bot เป็น Admin ใน group');
+    await sendMessage(chatId, 'โ ๏ธ Cannot post in group. Make sure Bot is Admin in the group.');
     return;
   }
 
-  // 2. ส่ง DM หาผู้ถูกท้าพร้อมปุ่ม
   const keyboard = {
     inline_keyboard: [[
-      { text: '✅ รับคำท้า',  callback_data: `accept|${fromId}|${player.clubGG}|${groupMsg.message_id}` },
-      { text: '❌ ปฏิเสธ',   callback_data: `decline|${fromId}|${player.clubGG}|${groupMsg.message_id}` },
+      { text: 'โ… Accept', callback_data: `accept|${fromId}|${player.clubGG}|${groupMsg.message_id}` },
+      { text: 'โ Decline', callback_data: `decline|${fromId}|${player.clubGG}|${groupMsg.message_id}` },
     ]],
   };
 
   const dmResult = await sendMessage(player.telegramId,
-    `⚔️ มีคนขอแก้มือคุณ!\n` +
-    `ชื่อในเกม: *${player.clubGG}*\n\n` +
-    `รับหรือปฏิเสธ? (หมดอายุใน 24 ชม.)`,
+    `โ”๏ธ Someone wants a rematch!\nClub GG: *${player.clubGG}*\n\nAccept or decline? (expires in 24h)`,
     { reply_markup: keyboard }
   );
 
   if (!dmResult) {
-    // ส่ง DM ไม่ได้ — ลบ group message แล้วแจ้ง
     await deleteMessage(GROUP_CHAT_ID, groupMsg.message_id);
-    await sendMessage(chatId,
-      `⚠️ ส่งข้อความหา *${player.clubGG}* ไม่ได้\n` +
-      `ให้เขา DM Bot แล้วพิมพ์ /start ก่อนนะครับ`
-    );
+    await sendMessage(chatId, `โ ๏ธ Cannot DM *${player.clubGG}*\nAsk them to /start the Bot first.`);
     return;
   }
 
-  // 3. บันทึก pending
-  pending[key] = { fromId, fromClubGG, targetClubGG: player.clubGG, expiresAt, groupMsgId: groupMsg.message_id };
-
+  pending[key] = { fromId, targetClubGG: player.clubGG, expiresAt, groupMsgId: groupMsg.message_id };
   await sendMessage(chatId,
-    `✅ ส่งคำท้าถึง *${player.clubGG}* แล้ว!\n` +
-    `รอการตอบรับ... (หมดอายุใน 24 ชม.)\n\n` +
-    `🔒 ไม่มีใครรู้ว่าคุณคือคนท้า`
+    `โ… Challenge sent to *${player.clubGG}*!\nWaiting for response... (24h)\n\n๐”’ Your identity is hidden`
   );
 }
 
 async function handleCancel(msg, args) {
   if (msg.chat.type !== 'private') return;
-  if (!args.length) {
-    await sendMessage(msg.chat.id, '❌ วิธีใช้: /cancel <ID Club GG>');
-    return;
-  }
-  const key   = args.join(' ').toLowerCase();
+  if (!args.length) { await sendMessage(msg.chat.id, 'โ Usage: /cancel <Club GG ID>'); return; }
+  const key = args.join(' ').toLowerCase();
   const entry = pending[key];
-  if (!entry) {
-    await sendMessage(msg.chat.id, `❌ ไม่มีคำท้าที่รออยู่`);
-    return;
-  }
-  if (entry.fromId !== msg.from.id) {
-    await sendMessage(msg.chat.id, '❌ นี่ไม่ใช่คำท้าของคุณ');
-    return;
-  }
+  if (!entry) { await sendMessage(msg.chat.id, 'โ No pending challenge found'); return; }
+  if (entry.fromId !== msg.from.id) { await sendMessage(msg.chat.id, 'โ This is not your challenge'); return; }
   await deleteMessage(GROUP_CHAT_ID, entry.groupMsgId);
   delete pending[key];
-  await sendMessage(msg.chat.id, `✅ ยกเลิกคำท้าแล้ว`);
+  await sendMessage(msg.chat.id, 'โ… Challenge cancelled');
 }
 
 async function handlePending(msg) {
   if (msg.chat.type !== 'private') return;
   cleanupExpired();
   const mine = Object.values(pending).filter(e => e.fromId === msg.from.id);
-  if (!mine.length) {
-    await sendMessage(msg.chat.id, '📭 คุณไม่มีคำท้าที่รออยู่');
-    return;
-  }
-  const lines = ['📋 *คำท้าของคุณที่ยังรออยู่:*\n'];
+  if (!mine.length) { await sendMessage(msg.chat.id, '๐“ญ No pending challenges'); return; }
+  const lines = ['๐“ *Your pending challenges:*\n'];
   for (const e of mine) {
-    const hrs  = Math.floor((e.expiresAt - Date.now()) / 3600000);
+    const hrs = Math.floor((e.expiresAt - Date.now()) / 3600000);
     const mins = Math.floor(((e.expiresAt - Date.now()) % 3600000) / 60000);
-    lines.push(`• *${e.targetClubGG}* — เหลือ ${hrs}ชม. ${mins}น.`);
+    lines.push(`โ€ข *${e.targetClubGG}* โ€” ${hrs}h ${mins}m left`);
   }
   await sendMessage(msg.chat.id, lines.join('\n'));
 }
 
 async function handleHelp(msg) {
   if (msg.chat.type !== 'private') {
-    await sendMessage(msg.chat.id, '📩 กรุณาใช้คำสั่งนี้ใน DM กับ Bot นะครับ');
+    await sendMessage(msg.chat.id, '๐“ฉ Please use this command in DM with the Bot');
     return;
   }
   await sendMessage(msg.chat.id,
-    '🎮 *RematchBot — คำสั่งทั้งหมด*\n\n' +
-    '/rematch <ID Club GG> — ท้าแก้มือ (ไม่มีใครรู้ว่าคุณท้า)\n' +
-    '/cancel <ID Club GG>  — ยกเลิกคำท้าที่ส่งไป\n' +
-    '/pending              — ดูคำท้าที่ยังรออยู่\n\n' +
-    '🔒 ทุกอย่างเป็นความลับ — กลุ่มเห็นแค่ว่ามีคนท้า ไม่รู้ว่าใคร'
+    '๐ฎ *RematchBot Commands*\n\n' +
+    '/rematch <Club GG ID> โ€” Challenge a player\n' +
+    '/cancel <Club GG ID>  โ€” Cancel your challenge\n' +
+    '/pending              โ€” View your pending challenges\n\n' +
+    '๐”’ Your identity is always hidden'
   );
 }
-
-// ════════════════════════════════════════════
-//  Callback (ปุ่ม ✅ / ❌)
-// ════════════════════════════════════════════
 
 async function handleCallback(cb) {
   await answerCallback(cb.id);
@@ -268,73 +187,40 @@ async function handleCallback(cb) {
   const key = targetClubGG.toLowerCase();
   const entry = pending[key];
 
-  // ตรวจหมดอายุ
   if (entry && Date.now() > entry.expiresAt) {
     delete pending[key];
-    await editMessage(cb.message.chat.id, cb.message.message_id, '⏰ คำท้านี้หมดอายุแล้ว');
+    await editMessage(cb.message.chat.id, cb.message.message_id, 'โฐ This challenge has expired');
     return;
   }
 
   if (action === 'accept') {
     delete pending[key];
-
-    // อัปเดต group
     await editMessage(GROUP_CHAT_ID, parseInt(groupMsgId),
-      `⚔️ *${targetClubGG}* รับคำท้าแล้ว!\n\n` +
-      `การแข่งขันกำลังจะเริ่ม... 🔥\n` +
-      `ใครจะชนะ รอดูกันเลย 👀`
+      `โ”๏ธ *${targetClubGG}* accepted the challenge!\n\nThe match is on! ๐”ฅ\nWho will win? ๐‘€`
     );
-
-    // แจ้ง Panupong
-    await editMessage(cb.message.chat.id, cb.message.message_id,
-      '✅ รับคำท้าแล้ว!\nBot แจ้งให้คู่ต่อสู้รู้แล้ว 🎮'
-    );
-
-    // แจ้ง Teerapong ใน DM
-    await sendMessage(parseInt(fromId),
-      `🎉 *${targetClubGG}* รับคำท้าแล้ว!\n\nติดต่อกันใน Club GG ได้เลยครับ ⚔️`
-    );
+    await editMessage(cb.message.chat.id, cb.message.message_id, 'โ… Challenge accepted! ๐ฎ');
+    await sendMessage(parseInt(fromId), `๐ *${targetClubGG}* accepted!\n\nContact them in Club GG โ”๏ธ`);
 
   } else if (action === 'decline') {
     delete pending[key];
-
-    // อัปเดต group — โชว์ว่าปฏิเสธ
     await editMessage(GROUP_CHAT_ID, parseInt(groupMsgId),
-      `🚫 *${targetClubGG}* ปฏิเสธคำท้าครั้งนี้\n\nไว้คราวหน้านะ 👋`
+      `๐ซ *${targetClubGG}* declined the challenge\n\nMaybe next time ๐‘`
     );
-
-    // แจ้ง Panupong
-    await editMessage(cb.message.chat.id, cb.message.message_id,
-      '❌ ปฏิเสธคำท้าแล้ว'
-    );
-
-    // แจ้ง Teerapong ใน DM
-    await sendMessage(parseInt(fromId),
-      `😔 *${targetClubGG}* ปฏิเสธคำท้าครั้งนี้`
-    );
+    await editMessage(cb.message.chat.id, cb.message.message_id, 'โ Challenge declined');
+    await sendMessage(parseInt(fromId), `๐” *${targetClubGG}* declined this time`);
   }
 }
-
-// ════════════════════════════════════════════
-//  Cleanup expired
-// ════════════════════════════════════════════
 
 function cleanupExpired() {
   const now = Date.now();
   for (const [key, entry] of Object.entries(pending)) {
     if (now > entry.expiresAt) {
-      editMessage(GROUP_CHAT_ID, entry.groupMsgId,
-        `⏰ คำท้า *${entry.targetClubGG}* หมดอายุแล้ว`
-      ).catch(() => {});
+      editMessage(GROUP_CHAT_ID, entry.groupMsgId, `โฐ Challenge for *${entry.targetClubGG}* expired`).catch(() => {});
       delete pending[key];
     }
   }
 }
-setInterval(cleanupExpired, 30 * 60 * 1000); // ทุก 30 นาที
-
-// ════════════════════════════════════════════
-//  Polling loop
-// ════════════════════════════════════════════
+setInterval(cleanupExpired, 30 * 60 * 1000);
 
 let offset = 0;
 
@@ -344,27 +230,17 @@ async function poll() {
       params: { offset, timeout: 30, allowed_updates: ['message', 'callback_query'] },
       timeout: 35000,
     });
-
     for (const update of res.data.result) {
       offset = update.update_id + 1;
-
-      // callback (ปุ่ม)
-      if (update.callback_query) {
-        await handleCallback(update.callback_query);
-        continue;
-      }
-
-      // message
-      const msg  = update.message;
+      if (update.callback_query) { await handleCallback(update.callback_query); continue; }
+      const msg = update.message;
       if (!msg || !msg.text) continue;
-
-      const text = msg.text.trim();
-      const [cmd, ...args] = text.split(/\s+/);
-
-      if (cmd === '/start' || cmd === '/help')    await handleHelp(msg);
-      else if (cmd === '/rematch')                await handleRematch(msg, args);
-      else if (cmd === '/cancel')                 await handleCancel(msg, args);
-      else if (cmd === '/pending')                await handlePending(msg);
+      console.log('chat_id:', msg.chat.id, 'type:', msg.chat.type);
+      const [cmd, ...args] = msg.text.trim().split(/\s+/);
+      if (cmd === '/start' || cmd === '/help') await handleHelp(msg);
+      else if (cmd === '/rematch') await handleRematch(msg, args);
+      else if (cmd === '/cancel') await handleCancel(msg, args);
+      else if (cmd === '/pending') await handlePending(msg);
     }
   } catch (e) {
     console.error('Poll error:', e.message);
@@ -372,11 +248,6 @@ async function poll() {
   setTimeout(poll, 1000);
 }
 
-// ════════════════════════════════════════════
-//  Keep-alive server (Render ต้องการ port)
-// ════════════════════════════════════════════
-
 http.createServer((req, res) => res.end('RematchBot running')).listen(process.env.PORT || 3000);
-
 console.log('RematchBot started!');
 poll();
